@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Flujo de Nómina</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script> 
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .mermaid-diagram {
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            overflow-x: auto; /* Para scroll horizontal si es muy ancho */
+            margin-top: 20px;
+        }
+        /* Estilos básicos para Mermaid, puedes personalizar más si lo deseas */
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flujo Completo de Gestión de Nómina de Vehículos</h1>
+    
+    <p>Este diagrama de flujo detalla el proceso de gestión de nómina de vehículos, desde la configuración inicial hasta el cierre de jornada, incluyendo las interacciones con el sistema y las validaciones necesarias.</p>
+
+    <div class="mermaid-diagram">
+        <pre class="mermaid">
+            graph TD
+                subgraph Configuración Inicial
+                    A[Administrador de Costos] -->|Define Cantidad Máxima Diaria por Empresa| B(Grilla de Configuración del Sistema)
+                    B --> C{¿Reducir Unidades Habilitadas?}
+                    C -- Sí --> D[Solicitar a Administrador de Transporte]
+                    C -- No --> E[Límites Máximos Establecidos]
+                end
+
+                subgraph Gestión de Nómina Habilitada
+                    E --> F[Equipo de Transporte]
+                    F --> G(Determina Unidades para Nómina Habilitada Inicial)
+                    G --> H{Dentro de Límites Autorizados por Costos?}
+                    H -- No --> G
+                    H -- Sí --> I(Nómina General de Internos)
+                    I --> J[Switch: Activo / Inactivo / Reemplazado]
+                    J --> K{Modificación de Interno?}
+                    K -- Sí --> L(Grilla Principal / Detalle de Interno)
+                    L --> M{Validar Cantidad Total Autorizada?}
+                    M -- No --> L
+                    M -- Sí --> N{Activar Interno?}
+                    N -- Sí --> O{Suma Total Activos > Límites Máx.?}
+                    O -- Sí --> P[Error: No se puede activar]
+                    O -- No --> Q[Interno Activado]
+                    N -- No --> R{Unidad No Disponible?}
+                    R -- Sí --> S{Estado: Reemplazado?}
+                    S -- Sí --> T[Reemplazar por Interno Activo]
+                    S -- No --> U[Estado: Inactivo]
+                    T --> Q
+                    P --> K
+                    Q --> K
+                    U --> K
+                    K -- No --> V[Nómina Habilitada Lista para Generación]
+                end
+
+                subgraph Generación y Gestión Diaria
+                    V --> W["Sistema [Diariamente, Horario Configurable]"]
+                    W --> X(Genera/Publica Nómina Habilitada)
+                    X --> Y(Se Denomina Nómina Habilitada)
+                    Y --> Z(Jornada Diaria Creada)
+                    Z --> AA[Contiene Disponible Específico y Histórico de Cambios]
+                end
+
+                subgraph Interacción con Empresa de Transporte
+                    AA --> AB[Empresa de Transporte]
+                    AB --> AC{Modificación: ¿CSV o Directa en Sistema?}
+                    AC -- CSV --> AD[Descargar Archivo CSV 'Exportar Nómina Disponible']
+                    AD --> AE(Archivo con Límites Máx. y Config. Inicial)
+                    AE --> AF[Modificar Campos en CSV]
+                    AF --> AG{Validar Modificaciones en CSV?}
+                    AG -- No --> AF
+                    AG -- Sí --> AH[Importar Archivo CSV 'Importar Disponible']
+                    AC -- Directa --> AI[Modificar Directamente en Aplicación]
+                    AI --> AJ{Validar Modificaciones Directas?}
+                    AJ -- No --> AI
+                    AJ -- Sí --> AH
+                end
+
+                subgraph Validaciones del Sistema SIAL
+                    AH --> AK["Sistema SIAL [Durante Importación]"]
+                    AK --> AL{Cantidad Total Camiones > Definida?}
+                    AL -- Sí --> AM[Error de Validación]
+                    AL -- No --> AN{"Campos 'Almacén de Trabajo', 'Situación del Interno', 'Horario de Disponibilidad', 'Interno con Acompañante', 'Interno con equipo de frío en funcionamiento' Válidos?"}
+                    AN -- No --> AM
+                    AN -- Sí --> AO{Unidades Pertenecen a Misma Empresa?}
+                    AO -- No --> AM
+                    AO -- Sí --> AP{Unidades en Estado Activo y Alta?}
+                    AP -- No --> AM
+                    AP -- Sí --> AQ[Validación Exitosa]
+                    AM --> AB
+                end
+
+                subgraph Confirmación y Cierre de Jornada
+                    AQ --> AR[Sistema]
+                    AR --> AS{Confirmación de Disponible?}
+                    AS -- Manual --> AT[Perfil Asignado Confirma Disponible]
+                    AS -- Automática --> AU[Generación Automática en Horario Configurado]
+                    AT --> AV[Disponible en Estado Definitivo]
+                    AU --> AV
+                    AV --> AW{Modificación Posterior?}
+                    AW -- Sí --> AX[Perfil Definido con Historial de Cambios]
+                    AW -- No --> AY[No se puede editar]
+                    AY --> AZ[Fin del Día]
+                    AX --> AZ
+                    AZ --> BA[Cierre Automático de Jornada]
+                    BA --> BB(Jornada Almacenada con Número y Fecha)
+                    BB --> BC[Contenedor para Módulos de Gestión Futuros]
+                end
+
+                style A fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style B fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style C fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style D fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style E fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style F fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style G fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style H fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style I fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style J fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style K fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style L fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style M fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style N fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style O fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style P fill:#FFCCCC,stroke:#FF0000,stroke-width:2px
+                style Q fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style R fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style S fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style T fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style U fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style V fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style W fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style X fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style Y fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style Z fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AA fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AB fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style AC fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style AD fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AE fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AF fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AG fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style AH fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AI fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AJ fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style AK fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style AL fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style AM fill:#FFCCCC,stroke:#FF0000,stroke-width:2px
+                style AN fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style AO fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style AP fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style AQ fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style AR fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style AS fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style AT fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AU fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AV fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style AW fill:#FFE699,stroke:#FFCC00,stroke-width:2px
+                style AX fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AY fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style AZ fill:#DDEBF7,stroke:#336699,stroke-width:2px
+                style BA fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style BB fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+                style BC fill:#F2F2F2,stroke:#CCCCCC,stroke-width:1px
+        </pre>
+    </div>
+
+    <script>
+        // Inicializa Mermaid para buscar y renderizar diagramas
+        mermaid.initialize({ 
+            startOnLoad: true, // Esto hace que Mermaid busque los diagramas al cargar la página
+            theme: 'default' // Puedes probar 'forest', 'dark', 'neutral' si quieres
+        });
+    </script>
+</body>
+</html>
